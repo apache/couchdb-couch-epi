@@ -77,7 +77,7 @@ defined_by_app(Handle, SourceApp, Function, Arity) ->
             lists:member(I, ModulesBySource)
         end, ModulesByFunc)
     catch
-        error:undef -> false
+        error:undef -> []
     end.
 
 

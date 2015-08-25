@@ -169,7 +169,7 @@ is_configured(Handle, Function, Arity) ->
 -spec is_defined_by_app(
     Handle :: atom(), SourceApp :: atom(),
     Function :: atom(), Arity :: pos_integer()) ->
-        list().
+        boolean().
 is_defined_by_app(Handle, SourceApp, Function, Arity) ->
     [] /= couch_epi_functions_gen:defined_by_app(
         Handle, SourceApp, Function, Arity).
