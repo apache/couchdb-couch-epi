@@ -14,6 +14,8 @@
 
 -export([add/3, remove/3, get_handle/1, hash/1, apply/4, apply/5, modules/3]).
 
+-export([defined_by_app/4]).
+
 -export([save/3]).
 
 -ifdef(TEST).
@@ -60,6 +62,23 @@ apply(Handle, _ServiceId, Function, Args, Opts) ->
     DispatchOpts = parse_opts(Opts),
     Modules = providers(Handle, Function, length(Args), DispatchOpts),
     dispatch(Handle, Modules, Function, Args, DispatchOpts).
+
+-spec defined_by_app(
+    Handle :: atom(), SourceApp :: atom(),
+    Function :: atom(), Arity :: pos_integer()) ->
+        list().
+defined_by_app(Handle, SourceApp, Function, Arity) ->
+    try
+        ModulesBySource = [
+            M || {M, _} <- get_current_definitions(Handle, SourceApp)
+        ],
+        ModulesByFunc = Handle:providers(Function, Arity),
+        lists:filter(fun(I) ->
+            lists:member(I, ModulesBySource)
+        end, ModulesByFunc)
+    catch
+        error:undef -> []
+    end.
 
 
 %% ------------------------------------------------------------------
@@ -214,6 +233,15 @@ definitions(Source, Modules) ->
 
 get_current_definitions(Handle) ->
     try Handle:definitions()
+    catch error:undef -> []
+    end.
+
+get_current_definitions(Handle, Source) ->
+    try
+        case Handle:definitions(Source) of
+            {error, {unknown, Source}} -> [];
+            Definitions -> Definitions
+        end
     catch error:undef -> []
     end.
 

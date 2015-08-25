@@ -21,11 +21,12 @@
     by_key/1, by_key/2, by_source/1, by_source/2,
     keys/1, subscribers/1]).
 
+-export([is_configured/3]).
+-export([is_defined_by_app/4]).
+
 %% apply
 -export([apply/5]).
 -export([any/5, all/5]).
-
--export([is_configured/3]).
 
 -export_type([service_id/0, app/0, key/0, handle/0, notify_cb/0]).
 
@@ -164,3 +165,11 @@ all(Handle, ServiceId, Function, Args, Opts) ->
 
 is_configured(Handle, Function, Arity) ->
     [] /= couch_epi_functions_gen:modules(Handle, Function, Arity).
+
+-spec is_defined_by_app(
+    Handle :: atom(), SourceApp :: atom(),
+    Function :: atom(), Arity :: pos_integer()) ->
+        boolean().
+is_defined_by_app(Handle, SourceApp, Function, Arity) ->
+    [] /= couch_epi_functions_gen:defined_by_app(
+        Handle, SourceApp, Function, Arity).
