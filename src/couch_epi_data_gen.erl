@@ -174,15 +174,16 @@ module_name({Service, Key}) when is_list(Service) andalso is_list(Key) ->
 
 is_updated(Handle, Source, Data) ->
     Sig = couch_epi_util:hash(Data),
-    try Handle:version(Source) of
-        {error, {unknown, Source}} -> true;
-        {error, Reason} -> throw(Reason);
-        Sig -> false;
-        _ -> true
-    catch
-        error:undef -> true;
-        Class:Reason ->
-            throw({Class, {Source, Reason}})
+    case erlang:function_exported(Handle, version, 1) of
+        true ->
+            case Handle:version(Source) of
+                {error, {unknown, Source}} -> true;
+                {error, Reason} -> throw(Reason);
+                Sig -> false;
+                _ -> true
+            end;
+        false ->
+            true
     end.
 
 save(Handle, Source, Data) ->
@@ -191,8 +192,11 @@ save(Handle, Source, Data) ->
     generate(Handle, NewDefs).
 
 get_current_data(Handle) ->
-    try Handle:by_source()
-    catch error:undef -> []
+    case erlang:function_exported(Handle, by_source, 1) of
+        true ->
+            Handle:by_source();
+        false ->
+            []
     end.
 
 

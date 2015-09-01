@@ -181,11 +181,7 @@ hash_of_file(FilePath) ->
     couch_epi_util:md5(Data).
 
 current(Handle, Subscriber) ->
-    try
-        case couch_epi_data_gen:by_source(Handle, Subscriber) of
-            undefined -> [];
-            Data -> Data
-        end
-    catch error:undef ->
-        []
+    case couch_epi_data_gen:by_source(Handle, Subscriber) of
+        undefined -> [];
+        Data -> Data
     end.

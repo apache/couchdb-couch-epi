@@ -190,15 +190,16 @@ module_name(ServiceId) when is_list(ServiceId) ->
 
 is_updated(Handle, Source, Modules) ->
     Sig = hash(Modules),
-    try Handle:version(Source) of
-        {error, {unknown, Source}} -> true;
-        {error, Reason} -> throw(Reason);
-        Sig -> false;
-        _ -> true
-    catch
-        error:undef -> true;
-        Class:Reason ->
-            throw({Class, {Source, Reason}})
+    case erlang:function_exported(Handle, version, 1) of
+        true ->
+            case Handle:version(Source) of
+                {error, {unknown, Source}} -> true;
+                {error, Reason} -> throw(Reason);
+                Sig -> false;
+                _ -> true
+            end;
+        false ->
+            true
     end.
 
 save(Handle, Source, Modules) ->
@@ -213,8 +214,11 @@ definitions(Source, Modules) ->
     {Source, SrcDefs}.
 
 get_current_definitions(Handle) ->
-    try Handle:definitions()
-    catch error:undef -> []
+    case erlang:function_exported(Handle, definitions, 1) of
+        true ->
+            Handle:definitions();
+        false ->
+            []
     end.
 
 defined_providers(Defs) ->
@@ -295,10 +299,11 @@ parse_opts([], Acc) ->
     Acc.
 
 providers(Handle, Function, Arity, #opts{ignore_providers = true}) ->
-    try
-        Handle:providers(Function, Arity)
-    catch
-        error:undef -> []
+    case erlang:function_exported(Handle, providers, 2) of
+        true ->
+            Handle:providers(Function, Arity);
+        false ->
+            []
     end;
 providers(Handle, Function, Arity, #opts{}) ->
     Handle:providers(Function, Arity).
