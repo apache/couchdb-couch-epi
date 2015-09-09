@@ -30,7 +30,13 @@
 %% ===================================================================
 
 start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+    case supervisor:start_link({local, ?MODULE}, ?MODULE, []) of
+        {ok, _Pid} = Reply ->
+            start_plugins(),
+            Reply;
+        Else ->
+            Else
+    end.
 
 %% ===================================================================
 %% Supervisor callbacks
@@ -42,3 +48,36 @@ init([]) ->
         ?SUP(couch_epi_keeper_sup, [])
     ],
     {ok, { {one_for_one, 5, 10}, Children} }.
+
+%% ===================================================================
+%% Internal functions definitions
+%% ===================================================================
+
+start_plugins() ->
+    Plugins = application:get_env(couch_epi, plugins, []),
+    io:format(user, "PLUGS: ~p~n", [Plugins]),
+    ensure_started(Plugins).
+
+ensure_started(Apps) ->
+    start_applications(Apps, []).
+
+start_applications([], _Acc) ->
+    ok;
+start_applications([couch_epi|Apps], Acc) ->
+    start_applications(Apps, Acc);
+start_applications([App|Apps], Acc) ->
+    case not lists:member(App, Acc) of
+        true ->
+            case application:start(App) of
+            {error, {already_started, _}} ->
+                start_applications(Apps, Acc);
+            {error, {not_started, Dep}} ->
+                start_applications([Dep, App | Apps], Acc);
+            {error, {not_running, Dep}} ->
+                start_applications([Dep, App | Apps], Acc);
+            ok ->
+                start_applications(Apps, [App|Acc])
+            end;
+        false ->
+            start_applications(Apps, Acc)
+    end.
