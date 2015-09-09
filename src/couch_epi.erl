@@ -130,9 +130,8 @@ subscribe(App, Key, M, F, A) ->
 unsubscribe(SubscriptionId) ->
     couch_epi_server:unsubscribe(SubscriptionId).
 
-%% The success typing is (atom() | tuple(),_,_,[any()],_) -> [any()]
 -spec apply(Handle :: handle(), ServiceId :: atom(), Function :: atom(),
-    Args :: [term()], Opts :: apply_opts()) -> ok.
+    Args :: [term()], Opts :: apply_opts()) -> [any()].
 
 apply(Handle, ServiceId, Function, Args, Opts) ->
     couch_epi_functions_gen:apply(Handle, ServiceId, Function, Args, Opts).
